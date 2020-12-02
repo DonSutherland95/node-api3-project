@@ -1,5 +1,6 @@
 const express = require('express');
 const Users = require('./userDb')
+const Posts = require('../posts/postDb')
 
 const router = express.Router();
 
@@ -20,20 +21,40 @@ router.post('/', (req, res) => {
 
 router.post('/:id/posts', (req, res) => {
   // do your magic!
-  
+  // const {id} = req.params
+  // // const {text} = req.body
+  // console.log(req.body)
+  // Users.insert(req.body)
+  //   .then(post =>{
+  //     // console.log(req.body)
+  //     res.status(201).json(post)
+  //   })
+  //   .catch(error=>{
+  //     res.status(500).json({message:'cannot save'})
+  //   })
+  // // console.log(req.body, req.params.id)
+  const newPost = {...req.body, user_id:req.params.id}
+  Posts.insert(newPost)
+    .then(post =>{
+      // console.log(req.body)
+      res.status(201).json(post)
+    })
+    .catch(error=>{
+      res.status(500).json({message:'cannot save'})
+    })
 });
 
 router.get('/', (req, res) => {
   // do your magic!
   
-  Users.get()
+  Users.get(req.query)
     .then(users=>{
-      res.json(users)
-      console.log(users)
+      res.status(200).json(users)
+      // console.log(users)
     })
     .catch(error=>{
-      console.log(error.message)
-      res.json(error.message) 
+      // console.log(error.message)
+      res.status(500).json(error.message) 
     })
 });
 
@@ -66,16 +87,42 @@ router.get('/:id/posts', (req, res) => {
     })
     .catch(error=>{
       console.log(error.message)
-      res.status(500).json({message: `Error in retrieving the posts for user ${id} `})
+      res.status(500).json({errorMessage: error.message })
     })
 });
 
 router.delete('/:id', (req, res) => {
   // do your magic!
+  const {id} = req.params
+  Users.remove(id)
+    .then(user=>{
+      if(user > 0){
+        res.status(200).json({ message: `user with id ${id} has been removed` });
+      } else{
+        res.status(404).json({message:'user could not be found'})
+      }
+    })
+    .catch(error=>{
+      res.status(500).json({errorMessage: error.message})
+    })
 });
 
 router.put('/:id', (req, res) => {
   // do your magic!
+  const {id} = req.params
+  const changes = req.body;
+
+  Users.update(id, changes)
+    .then(user=>{
+      if(user){
+        res.status(200).json(user);
+      } else{
+        res.status(404).json({message:'user could not be found'})
+      }
+    })
+    .catch(error=>{
+      res.status(500).json({errorMessage: error.message})
+    })
 });
 
 //custom middleware
